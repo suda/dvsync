@@ -5,6 +5,6 @@ RUN apk add --no-cache rsync openssh \
 	&& apk del .build-deps
 
 
-COPY bin/dvsync-client /usr/local/bin/dvsync-client
+COPY bin/ /usr/local/bin/
 
 ENTRYPOINT ["/usr/local/bin/dvsync-client"]
