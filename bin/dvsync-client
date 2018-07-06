@@ -1,0 +1,29 @@
+#!/bin/sh
+
+function stop() {
+	kill -15 1
+	sleep 5s
+	kill -9 -1
+}
+
+if [ -z ${DVSYNC_TOKEN} ]; then
+  echo "⛔️  Please provide \$DVSYNC_TOKEN. You can find it when you run dvsync-server"
+  stop
+fi
+
+if [ -z ${SYNC_DIR} ]; then
+	SYNC_DIR=/data
+fi
+# Decode the token
+DECODED=$(echo ${DVSYNC_TOKEN} | base64 -d)
+
+URL=$(echo "${DECODED}" | head -1)
+HOST=$(echo "${URL}" | cut -d':' -f1)
+PORT=$(echo "${URL}" | cut -d':' -f2)
+mkdir -p ~/.ssh
+echo "${DECODED}" | tail -n +2 > ~/.ssh/id_rsa
+chmod 0600 ~/.ssh/id_rsa
+ssh-keyscan -t rsa -p $PORT $HOST >> ~/.ssh/known_hosts
+
+# Start rsync
+rsync -azP /data -e "ssh -p $PORT root@${HOST}:${SYNC_DIR}"

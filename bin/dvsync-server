@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Wait until ngrok creates the tunnel
+while [ -z ${EXTERNAL_HOSTNAME} ]
+do
+  EXTERNAL_HOSTNAME=$( \
+    curl -s http://127.0.0.1:4040/api/tunnels | \
+    jq -r .tunnels[0].public_url | \
+    sed s/tcp:\\/\\/// \
+  )
+  if [ ${EXTERNAL_HOSTNAME} == "null" ]; then
+    unset EXTERNAL_HOSTNAME
+  fi
+  sleep 1s
+done
+echo "${EXTERNAL_HOSTNAME}" > /tmp/DVSYNC_TOKEN
+cat /root/.ssh/client_rsa >> /tmp/DVSYNC_TOKEN
+
+echo
+echo "⚡️  dvsync server is running!  ⚡️"
+echo "To sync, start the client with DVSYNC_TOKEN=$(cat /tmp/DVSYNC_TOKEN | base64 | tr -d '\n')"
+
+# Wait forever
+tail -f /dev/null

@@ -1,0 +1,19 @@
+version: '3.6'
+services:
+  dvsync-server:
+    image: 'suda/dvsync-server'
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    volumes:
+      - ${PWD}/out:/data
+
+  dvsync-client:
+    image: 'suda/dvsync-client'
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    environment:
+      DVSYNC_TOKEN: ${DVSYNC_TOKEN}
