@@ -1,7 +1,7 @@
 version: '3.6'
 services:
   dvsync-server:
-    image: 'suda/dvsync-server'
+    image: 'quay.io/suda/dvsync-server'
     build:
       context: .
       dockerfile: Dockerfile.server
@@ -11,7 +11,7 @@ services:
       - ${PWD}/out:/data
 
   dvsync-client:
-    image: 'suda/dvsync-client'
+    image: 'quay.io/suda/dvsync-client'
     build:
       context: .
       dockerfile: Dockerfile.client
