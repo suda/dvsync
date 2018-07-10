@@ -36,7 +36,7 @@ $ run --rm -e NGROK_AUTHTOKEN="$NGROK_AUTHTOKEN" \
 2. Once the server started, look into the logs and copy the `DVSYNC_TOKEN`
 3. Start the client where you want tot copy the data **to**:
 ```sh
-$ run --rm -e DVSYNC_TOKEN="$DVSYNC_TOKEN" \
+$ docker run --rm -e DVSYNC_TOKEN="$DVSYNC_TOKEN" \
   --mount source=MY_TARGET_VOLUME,target=/data \
   quay.io/suda/dvsync-client
 ```
@@ -45,7 +45,7 @@ $ run --rm -e DVSYNC_TOKEN="$DVSYNC_TOKEN" \
 Alternatively, if you want to copy this data to your local machine, you can mount a host directory as well:
 
 ```sh
-$ run --rm -e DVSYNC_TOKEN="$DVSYNC_TOKEN" \
+$ docker run --rm -e DVSYNC_TOKEN="$DVSYNC_TOKEN" \
   -v $PWD:/data \
   quay.io/suda/dvsync-client
 ```
