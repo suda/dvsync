@@ -5,9 +5,14 @@ if [ -z ${DVSYNC_TOKEN} ]; then
   stop
 fi
 
+# Setup variables
 if [ -z ${SYNC_DIR} ]; then
-	SYNC_DIR=/data/
+  SYNC_DIR=/data/
 fi
+if [ -z ${RSYNC_BACKOFF} ]; then
+  RSYNC_BACKOFF=180
+fi
+
 # Decode the token
 DECODED=$(echo ${DVSYNC_TOKEN} | base64 -d)
 
@@ -19,17 +24,18 @@ echo -e "⚡️ \033[0;32m dvsync client\033[0m is connecting to ${URL}\n"
 mkdir -p ~/.ssh
 echo "${DECODED}" | tail -n +2 > ~/.ssh/id_rsa
 chmod 0600 ~/.ssh/id_rsa
-ssh-keyscan -t rsa -p $PORT $HOST >> ~/.ssh/known_hosts 2>/dev/null
+ssh-keyscan -t rsa -p ${PORT} ${HOST} >> ~/.ssh/known_hosts 2>/dev/null
 
 # Start rsync with retry logic
+# https://superuser.com/questions/302842/resume-rsync-over-ssh-after-broken-connection
 while [ 1 ]
 do
-  rsync -azvP -e "ssh -p $PORT -o LogLevel=quiet" root@${HOST}:${SYNC_DIR} /data/
+  rsync -azvP -e "ssh -p ${PORT} -o LogLevel=quiet" root@${HOST}:${SYNC_DIR} /data/
   if [ "$?" = "0" ] ; then
-      echo "rsync completed normally"
+      echo -e "✅  rsync completed"
       exit
   else
-      echo "Rsync failure. Backing off and retrying..."
-      sleep 180
+      echo -e "🔄  rsync failure. Backing off and retrying..."
+      sleep ${RSYNC_BACKOFF}
   fi
 done
