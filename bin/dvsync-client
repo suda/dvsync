@@ -21,5 +21,15 @@ echo "${DECODED}" | tail -n +2 > ~/.ssh/id_rsa
 chmod 0600 ~/.ssh/id_rsa
 ssh-keyscan -t rsa -p $PORT $HOST >> ~/.ssh/known_hosts 2>/dev/null
 
-# Start rsync
-rsync -azvP -e "ssh -p $PORT -o LogLevel=quiet" root@${HOST}:${SYNC_DIR} /data/
+# Start rsync with retry logic
+while [ 1 ]
+do
+  rsync -azvP -e "ssh -p $PORT -o LogLevel=quiet" root@${HOST}:${SYNC_DIR} /data/
+  if [ "$?" = "0" ] ; then
+      echo "rsync completed normally"
+      exit
+  else
+      echo "Rsync failure. Backing off and retrying..."
+      sleep 180
+  fi
+done
