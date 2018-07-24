@@ -23,7 +23,7 @@ echo "${EXTERNAL_HOSTNAME}" > /tmp/DVSYNC_TOKEN
 cat /root/.ssh/client_rsa >> /tmp/DVSYNC_TOKEN
 
 echo -e "\n⚡️ \033[0;32m dvsync server is running!\033[0m To sync, start the client with following environment variable set:"
-echo -e "\n\033[1;32mDVSYNC_TOKEN=\033[0;33m$(cat /tmp/DVSYNC_TOKEN | base64 | tr -d '\n')\033[0m"
+echo -e "\n🤫   DVSYNC_TOKEN=$(cat /tmp/DVSYNC_TOKEN | base64 | tr -d '\n')"
 
 # Wait forever
 tail -f /dev/null
