@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.10.2
 
 RUN apk add --no-cache python2 py2-pip curl ca-certificates openssh-server rsync \
 	&& apk add --no-cache --virtual .build-deps git \
