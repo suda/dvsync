@@ -2,8 +2,8 @@ FROM alpine:3.10.2
 
 RUN apk add --no-cache python2 py2-pip curl ca-certificates openssh-server rsync \
 	&& apk add --no-cache --virtual .build-deps git \
-	&& curl -L -O https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip \
-	&& unzip ngrok-stable-linux-amd64.zip \
+	&& curl -L -O https://bin.equinox.io/a/jYLcLYYDPtj/ngrok-2.3.17-linux-amd64.zip \
+	&& unzip ngrok-2.3.17-linux-amd64.zip \
 	&& install -v -D ngrok /usr/local/bin/ngrok \
 	&& pip install supervisor \
 	&& pip install git+https://github.com/bendikro/supervisord-dependent-startup.git@v1.1.0 \
