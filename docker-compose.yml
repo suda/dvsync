@@ -8,7 +8,7 @@ services:
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
     volumes:
-      - ${PWD}/out:/data
+      - ./out:/data
 
   dvsync-client:
     image: 'quay.io/suda/dvsync-client'
@@ -17,3 +17,5 @@ services:
       dockerfile: Dockerfile.client
     environment:
       DVSYNC_TOKEN: ${DVSYNC_TOKEN}
+
+# vim:ts=2:sw=2:et
