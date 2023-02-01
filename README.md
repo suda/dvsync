@@ -10,8 +10,6 @@
 
 `dvsync` is a set of two containers running [OpenSSH](https://www.openssh.com/), [ngrok](https://ngrok.com/) and [rsync](https://rsync.samba.org/) that automatically create a secure, encrypted channel between each other and enable easy way to migrate data stored in Docker volumes.
 
-**Client:** [![dvsync-client](https://quay.io/repository/suda/dvsync-client/status "Docker Repository on Quay")](https://quay.io/repository/suda/dvsync-client) **Server:** [![dvsync-client](https://quay.io/repository/suda/dvsync-server/status "Docker Repository on Quay")](https://quay.io/repository/suda/dvsync-server)
-
 <hr />
 
 ![](media/dvsync.gif)
@@ -30,7 +28,7 @@ Here are example ways to run it using [Docker CLI](#docker-cli), [Docker Compose
 ```sh
 docker run --rm -e NGROK_AUTHTOKEN="$NGROK_AUTHTOKEN" \
   --mount source=MY_SOURCE_VOLUME,target=/data,readonly \
-  quay.io/suda/dvsync-server
+  ghcr.io/suda/dvsync-server
 ```
 
 2. Once the server started, look into the logs and copy the `DVSYNC_TOKEN`
@@ -38,7 +36,7 @@ docker run --rm -e NGROK_AUTHTOKEN="$NGROK_AUTHTOKEN" \
 ```sh
 docker run --rm -e DVSYNC_TOKEN="$DVSYNC_TOKEN" \
   --mount source=MY_TARGET_VOLUME,target=/data \
-  quay.io/suda/dvsync-client
+  ghcr.io/suda/dvsync-client
 ```
 
 #### Using local source/target
@@ -47,7 +45,7 @@ Alternatively, if you want to copy this data to your local machine, you can moun
 ```sh
 docker run --rm -e DVSYNC_TOKEN="$DVSYNC_TOKEN" \
   -v $PWD:/data \
-  quay.io/suda/dvsync-client
+  ghcr.io/suda/dvsync-client
 ```
 This can also be done other way around, when you start the server locally if you need to copy local data into the data center.
 
@@ -58,7 +56,7 @@ This can also be done other way around, when you start the server locally if you
 version: '3.6'
 services:
   dvsync-server:
-    image: 'quay.io/suda/dvsync-server'
+    image: 'ghcr.io/suda/dvsync-server'
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
     volumes:
@@ -76,7 +74,7 @@ volumes:
 version: '3.6'
 services:
   dvsync-server:
-    image: 'quay.io/suda/dvsync-client'
+    image: 'ghcr.io/suda/dvsync-client'
     environment:
       DVSYNC_TOKEN: ${DVSYNC_TOKEN}
     volumes:
@@ -97,7 +95,7 @@ metadata:
   name: dvsync-server
 spec:
   containers:
-  - image: quay.io/suda/dvsync-server
+  - image: ghcr.io/suda/dvsync-server
     name: dvsync-server
     env:
     - name: NGROK_AUTHTOKEN
@@ -117,7 +115,7 @@ metadata:
   name: dvsync-client
 spec:
   containers:
-  - image: quay.io/suda/dvsync-client
+  - image: ghcr.io/suda/dvsync-client
     name: dvsync-client
     env:
     - name: DVSYNC_TOKEN
