@@ -1,12 +1,12 @@
-FROM alpine:3.10.2
+FROM alpine:3.17.1
 
-RUN apk add --no-cache python2 py2-pip curl ca-certificates openssh-server rsync \
+RUN apk add --no-cache python3 py3-pip curl ca-certificates openssh-server rsync \
 	&& apk add --no-cache --virtual .build-deps git \
 	&& curl -L -O https://bin.equinox.io/a/jYLcLYYDPtj/ngrok-2.3.17-linux-amd64.zip \
 	&& unzip ngrok-2.3.17-linux-amd64.zip \
 	&& install -v -D ngrok /usr/local/bin/ngrok \
-	&& pip install supervisor \
-	&& pip install git+https://github.com/bendikro/supervisord-dependent-startup.git@v1.1.0 \
+	&& pip install supervisor
+RUN pip install git+https://github.com/suda/supervisord-dependent-startup.git \
 	&& curl -L -O https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 \
 	&& install -v -D jq-linux64 /usr/local/bin/jq \
 	&& rm -f ngrok-stable-linux-amd64.zip ngrok jq-linux64 \

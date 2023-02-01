@@ -14,4 +14,5 @@ echo -e "\n🔑  Generating client RSA key..."
 ssh-keygen -f ~/.ssh/client_rsa -N '' -q
 cp ~/.ssh/client_rsa.pub ~/.ssh/authorized_keys
 
+echo -e "\n🔐  Setting ngrok auth token..."
 ngrok authtoken ${NGROK_AUTHTOKEN} > /dev/null
