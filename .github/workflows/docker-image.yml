@@ -1,0 +1,76 @@
+name: Docker Image CI
+
+on:
+  push:
+    tags:
+    - '*'
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      env:
+        IMAGE_TAG: ${{ github.sha }}
+      run:
+        docker build . --file Dockerfile.server --tag ghcr.io/suda/dvsync-server:${IMAGE_TAG}
+        docker build . --file Dockerfile.client --tag ghcr.io/suda/dvsync-client:${IMAGE_TAG}
+
+name: Tag Docker Image with Git
+
+on:
+  push:
+    tags:
+    - '*'
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Log into the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata for the server image
+      id: servermeta
+      uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+      with:
+        images: ${{ env.REGISTRY }}/suda/dvsync-server
+    
+    - name: Extract metadata for the client image
+      id: clientmeta
+      uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+      with:
+        images: ${{ env.REGISTRY }}/suda/dvsync-client
+
+    - name: Build and push the server image
+      uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+      with:
+        context: Dockerfile.server
+        push: true
+        tags: ${{ steps.servermeta.outputs.tags }}
+        labels: ${{ steps.servermeta.outputs.labels }}
+    
+    - name: Build and push the client image
+      uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+      with:
+        context: Dockerfile.client
+        push: true
+        tags: ${{ steps.clientmeta.outputs.tags }}
+        labels: ${{ steps.clientmeta.outputs.labels }}
