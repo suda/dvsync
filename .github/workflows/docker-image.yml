@@ -41,7 +41,7 @@ jobs:
     - name: Build and push the server image
       uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
       with:
-        context: Dockerfile.server
+        file: Dockerfile.server
         push: true
         tags: ${{ steps.servermeta.outputs.tags }}
         labels: ${{ steps.servermeta.outputs.labels }}
@@ -49,7 +49,7 @@ jobs:
     - name: Build and push the client image
       uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
       with:
-        context: Dockerfile.client
+        file: Dockerfile.client
         push: true
         tags: ${{ steps.clientmeta.outputs.tags }}
         labels: ${{ steps.clientmeta.outputs.labels }}
