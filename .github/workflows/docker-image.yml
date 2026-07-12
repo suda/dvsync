@@ -10,14 +10,45 @@ on:
 env:
   REGISTRY: ghcr.io
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - image: server
+          dockerfile: Dockerfile.server
+          platform: linux/amd64
+          runner: ubuntu-latest
+        - image: server
+          dockerfile: Dockerfile.server
+          platform: linux/arm64
+          runner: ubuntu-24.04-arm
+        - image: client
+          dockerfile: Dockerfile.client
+          platform: linux/amd64
+          runner: ubuntu-latest
+        - image: client
+          dockerfile: Dockerfile.client
+          platform: linux/arm64
+          runner: ubuntu-24.04-arm
 
     steps:
+    - name: Prepare platform pair
+      run: |
+        platform=${{ matrix.platform }}
+        echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
     - name: Log into the Container registry
       uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
@@ -26,30 +57,72 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Extract metadata for the server image
-      id: servermeta
+    - name: Extract metadata
+      id: meta
       uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
       with:
-        images: ${{ env.REGISTRY }}/suda/dvsync-server
-    
-    - name: Extract metadata for the client image
-      id: clientmeta
-      uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-      with:
-        images: ${{ env.REGISTRY }}/suda/dvsync-client
+        images: ${{ env.REGISTRY }}/suda/dvsync-${{ matrix.image }}
 
-    - name: Build and push the server image
+    - name: Build and push by digest
+      id: build
       uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
       with:
-        file: Dockerfile.server
-        push: true
-        tags: ${{ steps.servermeta.outputs.tags }}
-        labels: ${{ steps.servermeta.outputs.labels }}
-    
-    - name: Build and push the client image
-      uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        file: ${{ matrix.dockerfile }}
+        platforms: ${{ matrix.platform }}
+        labels: ${{ steps.meta.outputs.labels }}
+        outputs: type=image,name=${{ env.REGISTRY }}/suda/dvsync-${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
+
+    - name: Export digest
+      run: |
+        mkdir -p ${{ runner.temp }}/digests
+        digest="${{ steps.build.outputs.digest }}"
+        touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+    - name: Upload digest
+      uses: actions/upload-artifact@v4
       with:
-        file: Dockerfile.client
-        push: true
-        tags: ${{ steps.clientmeta.outputs.tags }}
-        labels: ${{ steps.clientmeta.outputs.labels }}
+        name: digests-${{ matrix.image }}-${{ env.PLATFORM_PAIR }}
+        path: ${{ runner.temp }}/digests/*
+        if-no-files-found: error
+        retention-days: 1
+
+  merge:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        image: [server, client]
+
+    steps:
+    - name: Download digests
+      uses: actions/download-artifact@v4
+      with:
+        path: ${{ runner.temp }}/digests
+        pattern: digests-${{ matrix.image }}-*
+        merge-multiple: true
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log into the Container registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+      with:
+        images: ${{ env.REGISTRY }}/suda/dvsync-${{ matrix.image }}
+
+    - name: Create manifest list and push
+      working-directory: ${{ runner.temp }}/digests
+      run: |
+        docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+          $(printf '${{ env.REGISTRY }}/suda/dvsync-${{ matrix.image }}@sha256:%s ' *)
+
+    - name: Inspect image
+      run: |
+        docker buildx imagetools inspect ${{ env.REGISTRY }}/suda/dvsync-${{ matrix.image }}:${{ steps.meta.outputs.version }}
