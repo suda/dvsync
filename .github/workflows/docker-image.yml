@@ -120,7 +120,8 @@ jobs:
     - name: Create manifest list and push
       working-directory: ${{ runner.temp }}/digests
       run: |
-        docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+        docker buildx imagetools create \
+          $(printf -- '-t %s ' ${{ steps.meta.outputs.tags }}) \
           $(printf '${{ env.REGISTRY }}/suda/dvsync-${{ matrix.image }}@sha256:%s ' *)
 
     - name: Inspect image
